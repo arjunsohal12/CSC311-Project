@@ -2,6 +2,8 @@ from __future__ import annotations
 import pandas as pd
 from typing import List, Optional, Union
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 numeric_cols = [
     'How likely are you to use this model for academic tasks?',
     'How often do you expect this model to provide responses with references or supporting evidence?',
@@ -9,12 +11,17 @@ numeric_cols = [
     'Based on your experience, how often has this model given you a response that felt suboptimal?',
 
 ]
+text_cols = [
+    "In your own words, what kinds of tasks would you use this model for?",
+    'Think of one task where this model gave you a suboptimal response. What did the response look like, and why did you find it suboptimal?',
+    "When you verify a response from this model, how do you usually go about it?",
+]
 hot_cols = [
     'Which types of tasks do you feel this model handles best? (Select all that apply.)',
     'For which types of tasks do you feel this model tends to give suboptimal responses? (Select all that apply.)',
     "In your own words, what kinds of tasks would you use this model for?",
     'Think of one task where this model gave you a suboptimal response. What did the response look like, and why did you find it suboptimal?',
-    "When you verify a response from this model, how do you usually go about it?"
+    "When you verify a response from this model, how do you usually go about it?",
 ]
 class DataReader:
     """
@@ -38,6 +45,9 @@ class DataReader:
         for col in numeric_cols:
             blocks.append(np.expand_dims(self.X[col].to_numpy(), axis = 1)) # (N, d)
 
+        # blocks.append(self.embeddings)  # (N, 384)
+        # blocks.append(self.tfidf_matrix)  # shape (N, V)
+
         X = np.concatenate(blocks, axis = -1) # (N, total_d)
         Y = self.labels.to_numpy()
 
@@ -48,6 +58,24 @@ class DataReader:
         self.X.dropna(inplace=True)
         self.labels = self.X.pop("label")
         self.X = self.X.drop('student_id', axis = 1)
+
+        combined_text = (
+            self.X[text_cols]
+            .fillna("")
+            .agg(" ".join, axis=1)
+        )
+        # from sentence_transformers import SentenceTransformer
+
+        # model = SentenceTransformer('all-MiniLM-L6-v2')
+        # embeddings = model.encode(combined_text.tolist(), show_progress_bar=True)
+        # self.embeddings = embeddings  # shape (N, 384)
+
+        tfidf = TfidfVectorizer(
+            max_features=3000,        # cap vocab size to prevent explosion
+            ngram_range=(1, 1),       # unigrams + bigrams (often improves performance)
+            min_df=5                  # ignore extremely rare words
+        )
+        self.tfidf_matrix = tfidf.fit_transform(combined_text).toarray()  # (N, V)
 
         for col in numeric_cols:
             self.X[col] = self.X[col].str.split(" ").str[0].astype(int)
