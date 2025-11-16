@@ -85,7 +85,7 @@ param_dist = {
         100, 150, 200, 250, 300, 350, 400, 500
     ],
     "max_depth": [
-        2, 3, 4, 5, 6          # depth 6 is pushing it, but sometimes helps with sparse data
+        2, 3, 4, 5, 6  
     ],
     "learning_rate": [
         0.01, 0.02, 0.03, 0.05, 0.07, 0.1
@@ -115,7 +115,7 @@ param_dist = {
 
     # --- tree method ---
     "tree_method": [
-        "hist"    # include "auto" or "exact" if you want, but "hist" is usually best
+        "hist"   
     ],
 }
 
