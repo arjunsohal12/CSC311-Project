@@ -3,6 +3,7 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier
 from util.dataset_reader import DataReader
+from sklearn.metrics import accuracy_score
 
 dr = DataReader("training_data_clean.csv")
 X, y = dr.to_numpy()   # y: ['ChatGPT', 'Claude', 'Gemini', ...]
@@ -19,10 +20,6 @@ X_train, X_test, y_train, y_test = train_test_split(
     stratify=y_encoded
 )
 
-from xgboost import XGBClassifier
-
-from xgboost import XGBClassifier
-from sklearn.metrics import accuracy_score
 
 model = XGBClassifier(
     n_estimators=300,       # not huge
@@ -120,18 +117,18 @@ param_dist = {
 }
 
 
-search = RandomizedSearchCV(
-    base,
-    param_distributions=param_dist,
-    n_iter=40,
-    cv=5,
-    scoring="accuracy",
-    n_jobs=-1,
-    verbose=1,
-    random_state=42,
-)
+# search = RandomizedSearchCV(
+#     base,
+#     param_distributions=param_dist,
+#     n_iter=40,
+#     cv=5,
+#     scoring="accuracy",
+#     n_jobs=-1,
+#     verbose=1,
+#     random_state=42,
+# )
 
-search.fit(X, y_encoded)
+# search.fit(X, y_encoded)
 
-print("Best params:", search.best_params_)
-print("Best CV acc:", search.best_score_)
+# print("Best params:", search.best_params_)
+# print("Best CV acc:", search.best_score_)

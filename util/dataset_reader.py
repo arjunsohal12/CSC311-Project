@@ -3,6 +3,9 @@ import pandas as pd
 from typing import List, Optional, Union
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+import string
+
+TABLE = str.maketrans('', '', string.punctuation)
 
 numeric_cols = [
     'How likely are you to use this model for academic tasks?',
@@ -19,9 +22,6 @@ text_cols = [
 hot_cols = [
     'Which types of tasks do you feel this model handles best? (Select all that apply.)',
     'For which types of tasks do you feel this model tends to give suboptimal responses? (Select all that apply.)',
-    "In your own words, what kinds of tasks would you use this model for?",
-    'Think of one task where this model gave you a suboptimal response. What did the response look like, and why did you find it suboptimal?',
-    "When you verify a response from this model, how do you usually go about it?",
 ]
 class DataReader:
     """
@@ -44,7 +44,8 @@ class DataReader:
             blocks.append(np.stack(self.X[col].to_numpy(), axis = 0)) # (N, d) for each
         for col in numeric_cols:
             blocks.append(np.expand_dims(self.X[col].to_numpy(), axis = 1)) # (N, d)
-
+        for col in text_cols:
+            blocks.append(np.stack(self.X[col].to_numpy(), axis = 0)) # (N, d) for each
         # blocks.append(self.embeddings)  # (N, 384)
         # blocks.append(self.tfidf_matrix)  # shape (N, V)
 
@@ -85,26 +86,32 @@ class DataReader:
             for cell in self.X[col].dropna():
                 for item in cell.split(","):
                     selections.add(item.strip())
-
             selections = list(selections)
 
-            # Convert each row into vector
             def to_vector(cell):
                 tokens = {x.strip() for x in str(cell).split(",") if x.strip()}
                 return [1 if cat in tokens else 0 for cat in selections]
 
             self.X[col] = self.X[col].fillna("").apply(to_vector)
 
-        # for col in hot_cols:
-        #     arr = np.stack(self.X[col].to_numpy(), axis = 0) # (N, d)
-        #     new_col_names = [f"{col}__{i}" for i in range(arr.shape[1])]
+        for col in text_cols:
 
-        #     # attach new columns
-        #     for i, name in enumerate(new_col_names):
-        #         self.X[name] = arr[:, i]
+            def remove_punctuation(cell):
+                clean = cell.translate(TABLE).lower()
+                return clean
+            self.X[col] = self.X[col].fillna("").apply(remove_punctuation)
 
-        #     # drop the original list-column
-        #     self.X.drop(columns=[col], inplace=True)
+            selections = set()
+            for cell in self.X[col].dropna():
+                for item in cell.split(" "):
+                    selections.add(item.strip())
+            selections = list(selections)
+
+            def to_vector(cell):
+                tokens = {x.strip() for x in str(cell).split(" ") if x.strip()}
+                return [1 if cat in tokens else 0 for cat in selections]
+            
+            self.X[col] = self.X[col].fillna("").apply(to_vector)
 
         return self
 
@@ -181,7 +188,7 @@ class DataReader:
 if __name__ == "__main__":
     dr = DataReader("training_data_clean.csv")
     # print(dr.X.columns)
-    print(dr.X.loc[0])
+    # print(dr.X.loc[0])
     x, y = dr.to_numpy()
     print(x.shape)
     print(y.shape)
