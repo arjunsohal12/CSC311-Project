@@ -4,6 +4,7 @@ from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier
 from util.dataset_reader import DataReader
 from sklearn.metrics import accuracy_score
+import numpy as np
 
 dr = DataReader("training_data_clean.csv")
 X, y = dr.to_numpy()   # y: ['ChatGPT', 'Claude', 'Gemini', ...]
@@ -16,7 +17,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X,
     y_encoded,
     test_size=0.2,
-    random_state=42,
+    random_state=22,
     stratify=y_encoded
 )
 
@@ -115,7 +116,10 @@ param_dist = {
         "hist"   
     ],
 }
-
+y_pred = model.predict(X)
+print("XGBoost accuracy on full data:", accuracy_score(y_encoded, y_pred))
+model.save_model("xgb_model.json")
+np.save("label_classes.npy", le.classes_)
 
 # search = RandomizedSearchCV(
 #     base,
@@ -132,3 +136,12 @@ param_dist = {
 
 # print("Best params:", search.best_params_)
 # print("Best CV acc:", search.best_score_)
+from xgboost import XGBClassifier
+
+# Reload the model we just saved and check accuracy again in the SAME script
+reloaded = XGBClassifier()
+reloaded.load_model("xgb_model.json")
+
+y_pred_reload = reloaded.predict(X)
+print("Reloaded accuracy on full data (same script):",
+      accuracy_score(y_encoded, y_pred_reload))
