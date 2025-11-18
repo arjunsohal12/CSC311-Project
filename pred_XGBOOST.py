@@ -204,11 +204,6 @@ _CLASS_NAMES = np.load("label_classes.npy", allow_pickle=True)
 
 
 def predict_all(csv_filename: str):
-    """
-    Required by the assignment.
-    csv_filename: path to CSV with same columns as training_data_clean.csv.
-    Returns a list of class-label strings.
-    """
     dr = DataReader(csv_filename)
     X, Y = dr.to_numpy()  # ignore labels if present
     X = np.asarray(X, dtype=float)
