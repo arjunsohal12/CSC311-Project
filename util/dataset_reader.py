@@ -86,7 +86,7 @@ class DataReader:
             for cell in self.X[col].dropna():
                 for item in cell.split(","):
                     selections.add(item.strip())
-            selections = list(selections)
+            selections = sorted(selections)
             selections = [x for x in selections if len(x) >= len('Math computations')]
             # print(selections)
 
@@ -107,7 +107,7 @@ class DataReader:
             for cell in self.X[col].dropna():
                 for item in cell.split(" "):
                     selections.add(item.strip())
-            selections = list(selections)
+            selections = sorted(selections)
 
             def to_vector(cell):
                 tokens = {x.strip() for x in str(cell).split(" ") if x.strip()}
