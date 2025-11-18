@@ -44,7 +44,6 @@ class Tree:
         return self.nodes[node_id].left == -1
 
     def is_deleted(self, node_id: int) -> bool:
-        # XGBoost uses max uint32 for deleted nodes
         return self.nodes[node_id].split_idx == np.iinfo(np.uint32).max
 
     def left_child(self, node_id: int) -> int:
@@ -114,7 +113,6 @@ class ParsedModel:
             tree_id = int(tree["id"])
             assert tree_id == i
 
-            # structure arrays (cast to ints where appropriate)
             left_children = _to_int_list(tree["left_children"])
             right_children = _to_int_list(tree["right_children"])
             parents = _to_int_list(tree["parents"])
@@ -123,7 +121,6 @@ class ParsedModel:
             default_left = _to_int_list(tree["default_left"])
             split_types = _to_int_list(tree["split_type"])
 
-            # categorical CSR-style storage
             cat_segments = _to_int_list(tree["categories_segments"])
             cat_sizes = _to_int_list(tree["categories_sizes"])
             cat_nodes = _to_int_list(tree["categories_nodes"])
@@ -194,7 +191,6 @@ def _softmax(z: np.ndarray) -> np.ndarray:
     return exp / np.sum(exp, axis=1, keepdims=True)
 
 
-# ---- load model + labels once ----
 
 with open("xgb_model.json", "r") as f:
     _MODEL_JSON = json.load(f)
