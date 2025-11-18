@@ -55,14 +55,20 @@ class DataReader:
             blocks.append(np.stack(self.X[col].to_numpy(), axis = 0)) # (N, d) for each
 
         X = np.concatenate(blocks, axis = -1) # (N, total_d)
-        Y = self.labels.to_numpy()
+        if self.labels is not None:
+            Y = self.labels.to_numpy()
+        else:
+            Y = None
 
         return X, Y
     def load(self) -> "DataReader":
         """Load (or reload) and preprocess the CSV into memory."""
         self.X = pd.read_csv(self.path, **self.read_csv_kwargs)
         self.X.dropna(inplace=True)
-        self.labels = self.X.pop("label")
+        if "label" in self.X.columns:
+            self.labels = self.X.pop("label")
+        else:
+            self.labels = None
         self.X = self.X.drop('student_id', axis = 1)
 
         combined_text = (
