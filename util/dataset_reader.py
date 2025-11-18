@@ -87,6 +87,8 @@ class DataReader:
                 for item in cell.split(","):
                     selections.add(item.strip())
             selections = list(selections)
+            selections = [x for x in selections if len(x) >= len('Math computations')]
+            # print(selections)
 
             def to_vector(cell):
                 tokens = {x.strip() for x in str(cell).split(",") if x.strip()}
