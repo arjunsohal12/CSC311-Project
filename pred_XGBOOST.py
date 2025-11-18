@@ -216,7 +216,6 @@ def predict_all(csv_filename: str):
 
 
 if __name__ == "__main__":
-    # quick sanity check on your training CSV
     preds, targets = predict_all("training_data_clean.csv")
     print(len(preds), "preds; first 5:", preds[:10])
     print(len(targets), "Targets; first 5:", targets[:10])
