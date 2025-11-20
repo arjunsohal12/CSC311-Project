@@ -28,14 +28,14 @@ class DataReader:
     Lightweight CSV reader/inspector built on pandas.
     """
 
-    def __init__(self, path: str, **read_csv_kwargs):
+    def __init__(self, path: str, back_compat = True, **read_csv_kwargs):
         """
         path: path to the CSV file
         read_csv_kwargs: any pandas.read_csv keyword args (e.g., sep=',', encoding='utf-8')
         """
         self.path = path
         self.read_csv_kwargs = read_csv_kwargs
-        self.load()
+        self.load(back_compat=back_compat)
     # ---------- I/O ----------
     def to_numpy(self):
         blocks = []
