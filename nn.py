@@ -1,6 +1,6 @@
 from util.dataset_reader import *
 
-dr = DataReader("training_data_clean.csv")
+dr = DataReader("training_data_clean.csv", back_compat=False)
 X_raw = dr.X   # y: ['ChatGPT', 'Claude', 'Gemini', ...]
 y = dr.labels.to_numpy()
 y_index, y = np.unique(y, return_inverse=True)
@@ -37,13 +37,51 @@ print("x shape", X.shape)
 
 
 # split sets
-def split_data(X, y, train_ratio=0.7, val_ratio=0.2):
-    np.random.seed(1234)
+def split_data(X, y, train_ratio=0.7, val_ratio=0.2, responses_per_user=3, seed=1234):
+    """
+    Split dataset by user, assuming each user has a fixed number of consecutive responses.
+
+    Ensures that if a user's data is in one split (train/val/test),
+    *all* their responses go to that split.
+    """
     n = len(X)
-    idx = np.random.permutation(n)
-    n_train, n_val = int(n*train_ratio), int(n*(train_ratio+val_ratio))
-    X_train, X_val, X_test = X[idx[:n_train]], X[idx[n_train:n_val]], X[idx[n_val:]]
-    y_train, y_val, y_test = y[idx[:n_train]], y[idx[n_train:n_val]], y[idx[n_val:]]
+    n_users = n // responses_per_user
+
+    if n % responses_per_user != 0:
+        print(f"Warning: total rows ({n}) not divisible by responses_per_user ({responses_per_user}).")
+        n_users = n // responses_per_user
+
+    users = np.arange(n_users)
+    rng = np.random.default_rng(seed)
+    rng.shuffle(users)
+
+    n_train_users = int(train_ratio * n_users)
+    n_val_users = int(val_ratio * n_users)
+
+    train_users = users[:n_train_users]
+    val_users = users[n_train_users:n_train_users + n_val_users]
+    test_users = users[n_train_users + n_val_users:]
+
+    def expand_users(user_idx):
+        indices = []
+        for u in user_idx:
+            start = u * responses_per_user
+            end = start + responses_per_user
+            indices.extend(range(start, end))
+        return np.array(indices)
+
+    train_idx = expand_users(train_users)
+    val_idx = expand_users(val_users)
+    test_idx = expand_users(test_users)
+
+    # Perform splits
+    X_train, y_train = X[train_idx], y[train_idx]
+    X_val, y_val = X[val_idx], y[val_idx]
+    X_test, y_test = X[test_idx], y[test_idx]
+
+    print(f"Users: total={n_users}, train={len(train_users)}, val={len(val_users)}, test={len(test_users)}")
+    print(f"Samples: train={len(train_idx)}, val={len(val_idx)}, test={len(test_idx)}")
+
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 X_train, y_train, X_val, y_val, X_test, y_test = split_data(X, y)
@@ -110,7 +148,7 @@ class NNModel():
 
             # dropout
             if training and self.dropout > 0.0:
-                np.random.seed(2134+self.dropout_seed)
+                # np.random.seed(2134+self.dropout_seed)
                 self.dropout_seed += 1
                 mask = (np.random.rand(*A.shape) > self.dropout).astype(float)
                 A *= mask
@@ -203,7 +241,7 @@ val_d = {"losses": [], "epochs": []}
 print(f"start training for {epochs} epochs\nTraining: {len(X_train)} Val: {len(X_val)}")
 
 def create_mini_batches(X, y, batch_size, epoch, base_seed=67):
-    np.random.seed(base_seed + epoch*epoch)
+    # np.random.seed(base_seed + epoch*epoch)
     n = len(X)
     indices = np.random.permutation(n)
     
