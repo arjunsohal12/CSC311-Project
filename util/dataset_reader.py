@@ -53,12 +53,30 @@ class DataReader:
         Y = self.labels.to_numpy()
 
         return X, Y
-    def load(self) -> "DataReader":
+    def load(self, back_compat = True) -> "DataReader":
         """Load (or reload) and preprocess the CSV into memory."""
-        self.X = pd.read_csv(self.path, **self.read_csv_kwargs)
-        self.X.dropna(inplace=True)
-        self.labels = self.X.pop("label")
-        self.X = self.X.drop('student_id', axis = 1)
+        if not back_compat:
+            self.X = pd.read_csv(self.path, **self.read_csv_kwargs)
+
+            self.X = self.X[self.X["label"].notna()]
+
+            for col in text_cols:
+                if col in self.X.columns:
+                    self.X[col] = self.X[col].fillna("")
+
+            for col in numeric_cols:
+                if col in self.X.columns:
+                    self.X[col] = self.X[col].fillna("-1")
+
+            self.labels = self.X.pop("label")
+
+            if "student_id" in self.X.columns:
+                self.X = self.X.drop("student_id", axis=1)
+        else:
+            self.X = pd.read_csv(self.path, **self.read_csv_kwargs)
+            self.X.dropna(inplace=True)
+            self.labels = self.X.pop("label")
+            self.X = self.X.drop('student_id', axis = 1)
 
         combined_text = (
             self.X[text_cols]
