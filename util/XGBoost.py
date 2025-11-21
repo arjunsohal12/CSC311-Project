@@ -12,7 +12,9 @@ print(X.shape)
 print(y.shape)
 le = LabelEncoder()
 y_encoded = le.fit_transform(y) 
-
+unique, counts = np.unique(y, return_counts=True)
+print(np.asarray((unique, counts)).T)
+print(a)
 # First split: Train vs (Val+Test)
 X_train, X_temp, y_train, y_temp = train_test_split(
     X,
@@ -41,7 +43,7 @@ model = XGBClassifier(
     reg_alpha=1.0,
     n_estimators=700,
     min_child_weight=8,
-    max_depth=2,
+    max_depth=5,
     learning_rate=0.02,
     gamma=0.1,
     colsample_bytree=0.3,
@@ -82,7 +84,7 @@ print("Mean CV acc:", cv_scores.mean())
 print("Std:", cv_scores.std())
 
 from xgboost import XGBClassifier
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 
 base = XGBClassifier(
     objective="multi:softprob",
@@ -92,45 +94,45 @@ base = XGBClassifier(
     random_state=42,
 )
 
-param_dist = {
-    # --- model size / capacity ---
-    "n_estimators": [
-        100, 150, 200, 250, 300, 400, 500, 700, 900
-    ],
-    "max_depth": [
-        2, 3, 4, 5, 6, 7, 8
-    ],
-    "learning_rate": [
-        0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15
-    ],
+# param_dist = {
+#     # --- model size / capacity ---
+#     "n_estimators": [
+#         100, 150, 200, 250, 300, 400, 500, 700, 900
+#     ],
+#     "max_depth": [
+#         2, 3, 4, 5, 6, 7, 8
+#     ],
+#     "learning_rate": [
+#         0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15
+#     ],
 
-    # --- regularization / tree complexity ---
-    "min_child_weight": [
-        1, 2, 3, 5, 8, 10, 15, 20
-    ],
-    "gamma": [
-        0.0, 0.05, 0.1, 0.3, 0.5, 1.0, 2.0
-    ],
-    "reg_lambda": [
-        0.1, 1.0, 3.0, 5.0, 8.0, 10.0, 15.0, 20.0, 30.0
-    ],
-    "reg_alpha": [
-        0.0, 0.1, 0.5, 1.0, 2.0, 3.0, 5.0, 8.0
-    ],
+#     # --- regularization / tree complexity ---
+#     "min_child_weight": [
+#         1, 2, 3, 5, 8, 10, 15, 20
+#     ],
+#     "gamma": [
+#         0.0, 0.05, 0.1, 0.3, 0.5, 1.0, 2.0
+#     ],
+#     "reg_lambda": [
+#         0.1, 1.0, 3.0, 5.0, 8.0, 10.0, 15.0, 20.0, 30.0
+#     ],
+#     "reg_alpha": [
+#         0.0, 0.1, 0.5, 1.0, 2.0, 3.0, 5.0, 8.0
+#     ],
 
-    # --- feature / row subsampling ---
-    "subsample": [
-        0.5, 0.6, 0.7, 0.8, 0.9, 1.0
-    ],
-    "colsample_bytree": [
-        0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8
-    ],
+#     # --- feature / row subsampling ---
+#     "subsample": [
+#         0.5, 0.6, 0.7, 0.8, 0.9, 1.0
+#     ],
+#     "colsample_bytree": [
+#         0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8
+#     ],
 
-    # --- tree method (keep it fast / safe) ---
-    "tree_method": [
-        "hist"
-    ],
-}
+#     # --- tree method (keep it fast / safe) ---
+#     "tree_method": [
+#         "hist"
+#     ],
+# }
 
 y_pred = model.predict(X)
 print("XGBoost accuracy on full data:", accuracy_score(y_encoded, y_pred))

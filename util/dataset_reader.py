@@ -2,7 +2,6 @@ from __future__ import annotations
 import pandas as pd
 from typing import List, Optional, Union
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
 import string
 
 TABLE = str.maketrans('', '', string.punctuation)
@@ -71,12 +70,12 @@ class DataReader:
         # embeddings = model.encode(combined_text.tolist(), show_progress_bar=True)
         # self.embeddings = embeddings  # shape (N, 384)
 
-        tfidf = TfidfVectorizer(
-            max_features=3000,        # cap vocab size to prevent explosion
-            ngram_range=(1, 1),       # unigrams + bigrams (often improves performance)
-            min_df=5                  # ignore extremely rare words
-        )
-        self.tfidf_matrix = tfidf.fit_transform(combined_text).toarray()  # (N, V)
+        # tfidf = TfidfVectorizer(
+        #     max_features=3000,        # cap vocab size to prevent explosion
+        #     ngram_range=(1, 1),       # unigrams + bigrams (often improves performance)
+        #     min_df=5                  # ignore extremely rare words
+        # )
+        # self.tfidf_matrix = tfidf.fit_transform(combined_text).toarray()  # (N, V)
 
         for col in numeric_cols:
             self.X[col] = self.X[col].str.split(" ").str[0].astype(int)
